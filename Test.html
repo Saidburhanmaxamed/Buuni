@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUUNIApp</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        .quiz-container {
+            max-width: 600px;
+            margin: auto;
+            background: #f4f4f4;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+        }
+        .question {
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .options label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 5px 0;
+            cursor: pointer;
+        }
+        .options input {
+            margin: 0;
+        }
+        .btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        .btn:hover {
+            background: #218838;
+        }
+        #result {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .incorrect {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h2>Quiz Test</h2>
+        <div id="quiz"></div>
+        <button class="btn" onclick="submitQuiz()">Submit</button>
+        <button class="btn" onclick="generatePDF()" style="display: none;" id="pdfBtn">Download PDF</button>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+        
+        const questions = [
+            {
+                question: "What does HTML stand for?",
+                options: ["Hyper Text Markup Language", "High Tech Modern Language", "Home Tool Markup Language", "Hyperlink and Text Markup Language"],
+                answer: 0
+            },
+            {
+                question: "Which CSS property is used to change text color?",
+                options: ["text-color", "color", "font-color", "background-color"],
+                answer: 1
+            },
+            {
+                question: "Which keyword is used to declare a JavaScript variable?",
+                options: ["var", "let", "const", "both let and const"],
+                answer: 3
+            },
+                        {
+                question: "waa kee macalinkaaga technology ga",
+                options: ["eng ahmed", "Eng said hurhan", "mahamed ahmed", "Guuleed"],
+                answer: 1
+            },
+                                    {
+                question: "waa kee macalinkaaga physics ga",
+                options: ["eng ahmed", "Eng said hurhan", "mahamed ahmed", "Guuleed"],
+                answer: 3
+            }
+            
+        ];
+
+        const optionLetters = ["A", "B", "C", "D"];
+        let userAnswers = [];
+
+        function loadQuiz() {
+            let quizDiv = document.getElementById("quiz");
+            quizDiv.innerHTML = "";
+            questions.forEach((q, index) => {
+                let questionHTML = `<div class="question">${index + 1}. ${q.question}</div>`;
+                q.options.forEach((option, i) => {
+                    questionHTML += `
+                        <div class="options">
+                            <label id="q${index}-option${i}">
+                                <input type="radio" name="q${index}" value="${i}">
+                                <span>${optionLetters[i]}. ${option}</span>
+                            </label>
+                        </div>`;
+                });
+                quizDiv.innerHTML += questionHTML;
+            });
+        }
+
+        function submitQuiz() {
+            let score = 0;
+            userAnswers = [];
+
+            questions.forEach((q, index) => {
+                let selected = document.querySelector(`input[name="q${index}"]:checked`);
+                let correctOption = document.getElementById(`q${index}-option${q.answer}`);
+                let selectedValue = selected ? parseInt(selected.value) : null;
+                
+                userAnswers.push({
+                    question: q.question,
+                    selectedAnswer: selected ? optionLetters[selectedValue] + ". " + q.options[selectedValue] : "No answer",
+                    correctAnswer: optionLetters[q.answer] + ". " + q.options[q.answer],
+                    isCorrect: selectedValue === q.answer
+                });
+
+                if (selected) {
+                    let selectedOption = document.getElementById(`q${index}-option${selected.value}`);
+                    if (selectedValue === q.answer) {
+                        score++;
+                        selectedOption.classList.add("correct");
+                    } else {
+                        selectedOption.classList.add("incorrect");
+                        correctOption.classList.add("correct");
+                    }
+                } else {
+                    correctOption.classList.add("correct");
+                }
+            });
+
+            let percentage = ((score / questions.length) * 100).toFixed(2);
+            document.getElementById("result").textContent = `Your Score: ${percentage}%`;
+            document.getElementById("pdfBtn").style.display = "block";
+        }
+
+        function generatePDF() {
+            const pdf = new jsPDF();
+            pdf.setFont("helvetica", "bold");
+            pdf.text("Quiz Result", 10, 10);
+            pdf.setFont("helvetica", "normal");
+
+            let y = 20;
+            userAnswers.forEach((ans, index) => {
+                pdf.text(`${index + 1}. ${ans.question}`, 10, y);
+                pdf.text(`Your Answer: ${ans.selectedAnswer}`, 10, y + 10);
+                pdf.text(`Correct Answer: ${ans.correctAnswer}`, 10, y + 20);
+                pdf.text(ans.isCorrect ? "✅ Correct" : "❌ Incorrect", 10, y + 30);
+                y += 40;
+            });
+
+            pdf.text(`Final Score: ${document.getElementById("result").textContent}`, 10, y);
+            pdf.save("Quiz_Result.pdf");
+        }
+
+        loadQuiz();
+    </script>
+</body>
+</html>
